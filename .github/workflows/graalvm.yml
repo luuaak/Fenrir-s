@@ -26,8 +26,6 @@ jobs:
           version: '21.0.2'
           distribution: 'graalvm-community'
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          native-image-job-reports: 'true'
-          set-java-home: 'true'
 
 
       - name: Check GraalVM version
@@ -41,6 +39,3 @@ jobs:
       - name: Compile with Gradle
         run: ./gradlew nativeTestCompile
 
-
-      - name: Cleanup
-        run: docker-compose down
