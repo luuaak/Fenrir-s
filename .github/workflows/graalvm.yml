@@ -1,6 +1,4 @@
-# .github/workflows/graalvm.yml
-
-name: Build with GraalVM
+name: GraalVM CI
 
 on:
   push:
@@ -15,30 +13,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      # 1. จัดเตรียม OS
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      # Step 2: Set up Docker
+      # Step 2: Set up Docker Compose with Tests
+      - name: Set up Docker Compose with Tests
+        uses: adambirds/docker-compose-action@v1.5.0
+        with:
+          compose-file: "./docker-compose.yml"
+
+      # 2. สร้างฐานข้อมูลโดยใช้ Docker
       - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
+        run: docker-compose up relay-db
 
-      # Step 3: Set up Docker-Compose
-      - name: Start relay-db container
-        run: docker-compose up -d relay-db
-
-      # Step 4: Set up GraalVM
-      - name: Set up GraalVM
+      # 3. ติดตั้ง graalvm-community 21.0.2 และกำหนดตัวแปรสะภาพแสดงล้อม
+      - name: Setup GraalVM
         uses: graalvm/setup-graalvm@v1
         with:
-          graalvm-version: '21.0.2'
           java-version: '21'
+          distribution: 'graalvm'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Step 5: Verify GraalVM installation
+      # 4. ตรวจสอบว่า graalvm พร้อมใช้งาน
       - name: Check GraalVM version
         run: java --version
 
-      # Step 6: Compile with Gradle
-      - name: Compile with Gradle for Native Image
+      # 5. จัดเตรียมสภาพแวดล้อมแล้วทำการ compile
+      - name: Compile with Gradle
         run: ./gradlew nativeOptimizedCompile
+
+      # หยุดและลบคอนเทนเนอร์ Docker
+      - name: Cleanup
+        run: docker-compose down
