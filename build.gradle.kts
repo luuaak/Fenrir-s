@@ -90,9 +90,16 @@ application {
 
 
 java {
+
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+        vendor = JvmVendorSpec.GRAAL_VM
+    }
+
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
 }
+
 
 
 tasks {
@@ -125,7 +132,6 @@ graalvmNative {
             buildArgs.add("-R:MaxHeapSize=3G")
             buildArgs.add("--no-fallback")
             buildArgs.add("-march=native")
-            buildArgs.add("--initialize-at-build-time=io.github.cdimascio")
             //buildArgs.add("--trace-class-initialization=kotlin.DeprecationLevel")
             imageName.set("${project.name}-v$version")
             javaLauncher.set(javaToolchains.launcherFor {
