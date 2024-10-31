@@ -1,4 +1,6 @@
-name: GraalVM CI
+# .github/workflows/graalvm.yml
+
+name: Build with GraalVM
 
 on:
   push:
@@ -12,39 +14,31 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    services:
-      # 2. สร้างฐานข้อมูลโดยใช้ Docker
-      relay-db:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_USER: ${{ secrets.DATABASE_USERNAME }}
-          POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.DATABASE_NAME }}
-        ports:
-          - 5432:5432
-        healthcheck:
-          test: ["CMD-SHELL", "pg_isready -U ${{ secrets.DATABASE_USERNAME }} -d ${{ secrets.DATABASE_NAME }}"]
-          interval: 10s
-          timeout: 5s
-          retries: 5
-
     steps:
-      # 1. จัดเตรียม OS
-      - name: Checkout code
-        uses: actions/checkout@v2
+      # Step 1: Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      # 3. ติดตั้ง graalvm-community 21.0.2 และกำหนดตัวแปรสะภาพแสดงล้อม
-      - name: Setup GraalVM
+      # Step 2: Set up Docker
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      # Step 3: Set up Docker-Compose
+      - name: Start relay-db container
+        run: docker-compose up -d relay-db
+
+      # Step 4: Set up GraalVM
+      - name: Set up GraalVM
         uses: graalvm/setup-graalvm@v1
         with:
+          graalvm-version: '21.0.2'
           java-version: '21'
-          distribution: 'graalvm'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # 4. ตรวจสอบว่า graalvm พร้อมใช้งาน
+      # Step 5: Verify GraalVM installation
       - name: Check GraalVM version
         run: java --version
 
-      # 5. จัดเตรียมสภาพแวดล้อมแล้วทำการ compile
-      - name: Compile with Gradle
+      # Step 6: Compile with Gradle
+      - name: Compile with Gradle for Native Image
         run: ./gradlew nativeOptimizedCompile
