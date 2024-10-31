@@ -1,4 +1,4 @@
-name: GraalVM CI
+name: GraalVM Native Image builds
 
 on:
   push:
@@ -29,14 +29,20 @@ jobs:
           java-version: '21.0.2'
           distribution: 'graalvm'
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          native-image-job-reports: 'true'
+
 
       # ตรวจสอบว่า graalvm พร้อมใช้งาน
       - name: Check GraalVM version
-        run: java --version
+        run: |
+          echo "GRAALVM_HOME: $GRAALVM_HOME"
+          echo "JAVA_HOME: $JAVA_HOME"
+          java --version
+          native-image --version
 
       # จัดเตรียมสภาพแวดล้อมแล้วทำการ compile
       - name: Compile with Gradle
-        run: ./gradlew nativeOptimizedCompile
+        run: ./gradlew nativeTestCompile
 
       # หยุดและลบคอนเทนเนอร์ Docker
       - name: Cleanup
