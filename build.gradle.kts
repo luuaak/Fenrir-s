@@ -92,8 +92,8 @@ application {
 java {
 
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-        vendor = JvmVendorSpec.GRAAL_VM
+        languageVersion.set(JavaLanguageVersion.of(21))
+        vendor.set(JvmVendorSpec.GRAAL_VM)
     }
 
     sourceCompatibility = JavaVersion.VERSION_21
