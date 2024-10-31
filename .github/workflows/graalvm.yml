@@ -17,15 +17,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step 2: Set up Docker Compose with Tests
+      #
       - name: Set up Docker Compose with Tests
         uses: adambirds/docker-compose-action@v1.5.0
         with:
           compose-file: "./docker-compose.yml"
-
-      # 2. สร้างฐานข้อมูลโดยใช้ Docker
-      - name: Set up Docker
-        run: docker-compose up relay-db
+          test-container: relay-db
 
       # 3. ติดตั้ง graalvm-community 21.0.2 และกำหนดตัวแปรสะภาพแสดงล้อม
       - name: Setup GraalVM
