@@ -1,0 +1,42 @@
+name: GraalVM CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. จัดเตรียม OS
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # 2. สร้างฐานข้อมูลโดยใช้ Docker
+      - name: Set up Docker
+        run: docker-compose up relay-db
+
+      # 3. ติดตั้ง graalvm-community 21.0.2 และกำหนดตัวแปรสะภาพแสดงล้อม
+      - name: Setup GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21'
+          distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # 4. ตรวจสอบว่า graalvm พร้อมใช้งาน
+      - name: Check GraalVM version
+        run: java --version
+
+      # 5. จัดเตรียมสภาพแวดล้อมแล้วทำการ compile
+      - name: Compile with Gradle
+        run: ./gradlew nativeOptimizedCompile
+
+      # หยุดและลบคอนเทนเนอร์ Docker
+      - name: Cleanup
+        run: docker-compose down

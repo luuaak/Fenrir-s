@@ -1,0 +1,31 @@
+FROM ghcr.io/graalvm/graalvm-community:21.0.2 AS build
+RUN useradd -ms /bin/sh builder
+USER builder
+WORKDIR /home/builder/app
+
+COPY --chown=builder:builder gradlew build.gradle.kts settings.gradle.kts gradle.properties ./
+COPY --chown=builder:builder src ./src
+COPY --chown=builder:builder gradle ./gradle
+
+RUN sed -i 's/\r$//' gradlew
+
+RUN ./gradlew nativeOptimizedCompile
+
+
+FROM alpine:latest
+
+RUN apk update && \
+    apk add --no-cache libc6-compat
+
+RUN addgroup -S appgroup -g 1000 && \
+    adduser -S -G appgroup -u 1000 -h /app appuser
+
+USER appuser
+WORKDIR /app
+
+COPY --from=build /home/builder/app/build/native/nativeOptimizedCompile/fenrir-s-v1.0 ./
+COPY --chown=appuser:appgroup .env /app/.env
+
+EXPOSE 6724
+
+ENTRYPOINT ["/app/fenrir-s-v1.0"]
