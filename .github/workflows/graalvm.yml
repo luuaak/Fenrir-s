@@ -13,17 +13,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. จัดเตรียม OS
-      - name: Checkout code
-        uses: actions/checkout@v2
 
-      # 2
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Set up Docker Compose with Tests
         uses: adambirds/docker-compose-action@v1.5.0
         with:
-          test-container: relay-db
+          up-flags: relay-db
 
-      # 3. ติดตั้ง graalvm-community 21.0.2 และกำหนดตัวแปรสะภาพแสดงล้อม
+      # ติดตั้ง graalvm-community 21.0.2 และกำหนดตัวแปรสะภาพแสดงล้อม
       - name: Setup GraalVM
         uses: graalvm/setup-graalvm@v1
         with:
@@ -31,11 +30,11 @@ jobs:
           distribution: 'graalvm'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # 4. ตรวจสอบว่า graalvm พร้อมใช้งาน
+      # ตรวจสอบว่า graalvm พร้อมใช้งาน
       - name: Check GraalVM version
         run: java --version
 
-      # 5. จัดเตรียมสภาพแวดล้อมแล้วทำการ compile
+      # จัดเตรียมสภาพแวดล้อมแล้วทำการ compile
       - name: Compile with Gradle
         run: ./gradlew nativeOptimizedCompile
 
