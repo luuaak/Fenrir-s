@@ -17,11 +17,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      #
+      # 2
       - name: Set up Docker Compose with Tests
         uses: adambirds/docker-compose-action@v1.5.0
         with:
-          compose-file: "./docker-compose.yml"
           test-container: relay-db
 
       # 3. ติดตั้ง graalvm-community 21.0.2 และกำหนดตัวแปรสะภาพแสดงล้อม
