@@ -7,14 +7,13 @@ import io.micronaut.websocket.WebSocketSession
 import org.fenrirs.relay.core.nip01.SubscriptionData
 import org.fenrirs.relay.policy.FiltersX
 import org.slf4j.LoggerFactory
-import kotlin.time.Duration.Companion.hours
 
 @Bean
 @Factory
 object Subscription {
 
     private val config: Cache<String, SubscriptionData> = Cache.Builder<String, SubscriptionData>()
-        .maximumCacheSize(50_000) // ขนาดสูงสุด
+        .maximumCacheSize(50_000)
         .build()
 
     private fun <T : Any> set(key: String, value: T) {
@@ -114,11 +113,6 @@ object Subscription {
      */
     fun clearSession(session: WebSocketSession) = remove(session.id)
 
-    /**
-     * ดึงข้อมูลทั้งหมดจาก cache
-     * @return ข้อมูลทั้งหมดที่เก็บไว้ใน cache
-     */
-    //fun getAllSessions(): Map<String, SubscriptionData> = config.asMap()
 
     private val LOG = LoggerFactory.getLogger(Subscription::class.java)
 

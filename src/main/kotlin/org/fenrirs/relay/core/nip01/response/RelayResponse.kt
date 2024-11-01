@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 import org.fenrirs.relay.policy.Event
-import org.fenrirs.storage.Subscription
+import org.fenrirs.storage.Subscription.clearSubscription
 import org.fenrirs.storage.statement.StoredServiceImpl
 
 import org.slf4j.Logger
@@ -26,9 +26,6 @@ sealed class RelayResponse<out T> {
 
     @Inject
     lateinit var sqlExec: StoredServiceImpl
-
-    @Inject
-    lateinit var subscribe: Subscription
 
     /**
      * EVENT เป็นการตอบกลับประเภทเหตุการณ์ ใช้ในการส่งเหตุการณ์ที่ได้รับการร้องขอจากไคลเอนต์
@@ -98,7 +95,7 @@ sealed class RelayResponse<out T> {
                 session.sendAsync(payload)
 
                 if (this@RelayResponse is CANCEL) {
-                    subscribe.clearSubscription(session, subscriptionId)
+                    clearSubscription(session, subscriptionId)
                 }
 
             }

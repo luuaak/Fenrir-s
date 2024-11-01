@@ -50,7 +50,7 @@ class Environment {
     val PROOF_OF_WORK_DIFFICULTY: Int by lazy { properties.getProperty("PROOF_OF_WORK_DIFFICULTY")?.toInt() ?: 0 }
 
     // Limitation settings
-    val MAX_FILTERS: Int by lazy { properties.getProperty("MAX_FILTERS")?.toIntOrNull() ?: 15 }
+    val MAX_FILTERS: Int by lazy { properties.getProperty("MAX_FILTERS")?.toIntOrNull() ?: 5 }
     val MAX_LIMIT: Int by lazy { properties.getProperty("MAX_LIMIT")?.toIntOrNull() ?: 150 }
     val PAYMENT_REQ: Boolean = false
     val AUTH_REQ: Boolean = false

@@ -1,6 +1,8 @@
 package org.fenrirs.relay.core.nip01.command
 
 import kotlinx.serialization.json.*
+import org.fenrirs.relay.core.nip01.CommandParseResult
+import org.fenrirs.relay.core.nip01.EventCommandResult
 
 import org.fenrirs.relay.policy.Event
 import org.fenrirs.relay.policy.FiltersX
@@ -13,11 +15,6 @@ import org.fenrirs.relay.core.nip01.Transform.toFiltersX
 import org.fenrirs.relay.core.nip01.Transform.validateElement
 import org.fenrirs.storage.Environment
 
-import org.slf4j.LoggerFactory
-
-/**
- * CommandFactory เป็นอ็อบเจกต์ที่ใช้ในการประมวลผลคำสั่งที่ส่งมาจากไคลเอนต์
- */
 object CommandFactory {
 
     private val env: Environment by lazy {
@@ -25,11 +22,13 @@ object CommandFactory {
     }
 
     /**
-     * parse ใช้ในการแยกและวิเคราะห์คำสั่งที่ส่งมาจากไคลเอนต์
-     * @param payload ข้อมูล JSON ที่เป็นคำสั่ง
-     * @return Pair ที่มีค่าเป็นคำสั่งและ Pair ที่มีค่าเป็นสถานะการประมวลผลและข้อความเตือน (เช่น สถานะการประมวลผลเป็น true หมายถึงสำเร็จ และข้อความเตือนว่าเกิดข้อผิดพลาด)
+     * ฟังก์ชัน parse ใช้ในการแยกและวิเคราะห์คำสั่งที่ส่งมาจากไคลเอนต์
+     * @param payload ข้อมูล JSON ที่เป็นคำสั่งจากไคลเอนต์
+     * @return ผลลัพธ์เป็นคู่ของคำสั่ง (Command) และผลการตรวจสอบความถูกต้อง (ValidationResult)
+     * ฟังก์ชันนี้จะทำการตรวจสอบรูปแบบของ JSON และระบุประเภทคำสั่ง (เช่น EVENT, REQ, CLOSE)
+     * แล้วส่งต่อไปยังฟังก์ชันที่เหมาะสมเพื่อประมวลผลคำสั่งนั้น ๆ
      */
-    fun parse(payload: String): Pair<Command?, Pair<Boolean, String>> {
+    fun parse(payload: String): CommandParseResult {
         val jsonElement = try {
             Json.parseToJsonElement(payload)
         } catch (e: Exception) {
@@ -52,11 +51,12 @@ object CommandFactory {
 
 
     /**
-     * eventCommand ใช้ในการแยกและวิเคราะห์คำสั่งประเภท EVENT
+     * ฟังก์ชัน parseEvent ใช้ในการแยกและวิเคราะห์คำสั่งประเภท EVENT
      * @param jsonArray JsonArray ที่มีข้อมูลเป็นคำสั่งประเภท EVENT
-     * @return Pair ที่มีค่าเป็นคำสั่งและ Pair ที่มีค่าเป็นสถานะการประมวลผลและข้อความเตือน
+     * @return ผลลัพธ์เป็นคู่ของคำสั่ง EVENT และผลการตรวจสอบความถูกต้อง
+     * ฟังก์ชันนี้จะทำการแปลงข้อมูล JSON เป็นอ็อบเจ็กต์ Event และตรวจสอบความถูกต้องของข้อมูล
      */
-    private fun parseEvent(jsonArray: JsonArray): Pair<Command, Pair<Boolean, String>> {
+    private fun parseEvent(jsonArray: JsonArray): EventCommandResult {
         if (jsonArray.size != 2 || jsonArray[1] !is JsonObject) {
             throw IllegalArgumentException("invalid: EVENT command format")
         }
@@ -70,11 +70,13 @@ object CommandFactory {
 
 
     /**
-     * reqCommand ใช้ในการแยกและวิเคราะห์คำสั่งประเภท REQ
+     * ฟังก์ชัน parseREQ ใช้ในการแยกและวิเคราะห์คำสั่งประเภท REQ
      * @param jsonArray JsonArray ที่มีข้อมูลเป็นคำสั่งประเภท REQ
-     * @return Pair ที่มีค่าเป็นคำสั่งและ Pair ที่มีค่าเป็นสถานะการประมวลผลและข้อความเตือน
+     * @return ผลลัพธ์เป็นคู่ของคำสั่ง REQ และผลการตรวจสอบความถูกต้อง
+     * ฟังก์ชันนี้จะทำการตรวจสอบจำนวน filters ที่กำหนดใน env.MAX_FILTERS
+     * และตรวจสอบความถูกต้องของข้อมูล filtersX
      */
-    private fun parseREQ(jsonArray: JsonArray): Pair<Command, Pair<Boolean, String>> {
+    private fun parseREQ(jsonArray: JsonArray): EventCommandResult {
         if (jsonArray.size < 3 || jsonArray[1] !is JsonPrimitive || jsonArray.drop(2).any { it !is JsonObject }) {
             throw IllegalArgumentException("invalid: REQ command format")
         }
@@ -96,19 +98,19 @@ object CommandFactory {
 
 
     /**
-     * closeCommand ใช้ในการแยกและวิเคราะห์คำสั่งประเภท CLOSE
+     * ฟังก์ชัน parseClose ใช้ในการแยกและวิเคราะห์คำสั่งประเภท CLOSE
      * @param jsonArray JsonArray ที่มีข้อมูลเป็นคำสั่งประเภท CLOSE
-     * @return Pair ที่มีค่าเป็นคำสั่งและ Pair ที่มีค่าเป็นสถานะการประมวลผลและข้อความเตือน
+     * @return ผลลัพธ์เป็นคู่ของคำสั่ง CLOSE และผลการตรวจสอบความถูกต้อง
+     * ฟังก์ชันนี้จะทำการตรวจสอบรูปแบบของคำสั่ง CLOSE
+     * และคืนผลลัพธ์ว่าผ่านการตรวจสอบหรือไม่
      */
-    private fun parseClose(jsonArray: JsonArray): Pair<Command, Pair<Boolean, String>> {
+    private fun parseClose(jsonArray: JsonArray): EventCommandResult {
         if (jsonArray.size != 2 || jsonArray[1] !is JsonPrimitive) {
             throw IllegalArgumentException("invalid: CLOSE command format")
         }
         val subscriptionId = jsonArray[1].jsonPrimitive.content
         return CLOSE(subscriptionId) to (true to "")
     }
-
-    private val LOG = LoggerFactory.getLogger(CommandFactory::class.java)
 
 
 }

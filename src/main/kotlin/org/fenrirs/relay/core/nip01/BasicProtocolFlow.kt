@@ -104,7 +104,7 @@ class BasicProtocolFlow @Inject constructor(
      * @param session เซสชัน WebSocket ที่ใช้ในการตอบกลับSF
      */
     private suspend fun handleDuplicateEvent(event: Event, session: WebSocketSession) {
-        LOG.info("Event kind: ${PURPLE}[${event.kind}] ${RESET}with ID ${event.id} already exists in the database")
+        LOG.info("Event kind: ${PURPLE}[${event.kind}] ${RESET}already exists in the database")
         RelayResponse.OK(event.id!!, false, "duplicate: already have this event").toClient(session)
     }
 
